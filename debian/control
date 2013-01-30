@@ -1,0 +1,21 @@
+Source: phantom-elliptics
+Section: net
+Priority: optional
+Maintainer: Ruslan Nigmatullin <euroelessar@yandex.ru>
+Build-Depends:	debhelper (>= 7),
+		cmake,
+		elliptics-dev (>= 2.21),
+		elliptics-client (>= 2.21),
+		phantom-dev (>= 0.14.0~pre42)
+Standards-Version: 1.0.0
+Homepage: http://github.com/euroelessar/phantom-elliptics
+
+Package: phantom-elliptics
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Elliptics method for phantom
+
+Package: phantom-elliptics-dbg
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Elliptics method for phantom

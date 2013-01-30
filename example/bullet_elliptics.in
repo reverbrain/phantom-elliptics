@@ -1,0 +1,29 @@
+40 5 write_just_key
+0 0 1:2:3 just_key
+write 0
+|just_value|
+
+42 10 write_just_key2
+0 0 1:2:3 just_key2
+write 0
+|just_value2|
+
+24 15 read_just_key
+0 0 1:2:3 just_key
+read
+
+30 20 read_just_key2
+0 0 1:2:3 just_key2
+read 1 11
+
+32 25 read_just_key999
+0 0 1:2:3 just_key999
+read 1 11
+
+0
+
+{size} {time, msec} {tag}
+{cflags} {ioflags} {groups} {filename} {type?}
+{command} {offset?} {size?}
+{data, must be omitted for any except write}
+
