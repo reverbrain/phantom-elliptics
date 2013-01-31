@@ -239,7 +239,7 @@ interval_t log_file_t::stat(bool clear) {
 	return delta_print;
 }
 
-class source_log_t : public source_t {
+class elliptics_source_log_t : public elliptics_source_t {
 public:
 	struct config_t {
 		string_t filename;
@@ -272,21 +272,21 @@ private:
 	virtual void fini();
 
 public:
-	inline source_log_t(string_t const &, config_t const &config) :
+	inline elliptics_source_log_t(string_t const &, config_t const &config) :
 		mutex(), fd(-1), ibuf_size(config.ibuf_size), filename(config.filename),
 		log_file(NULL) { }
 
-	inline ~source_log_t() throw() { }
+	inline ~elliptics_source_log_t() throw() { }
 };
 
-namespace source_log {
-config_binding_sname(source_log_t);
-config_binding_value(source_log_t, filename);
-config_binding_value(source_log_t, ibuf_size);
-config_binding_ctor(source_t, source_log_t);
+namespace elliptics_source_log {
+config_binding_sname(elliptics_source_log_t);
+config_binding_value(elliptics_source_log_t, filename);
+config_binding_value(elliptics_source_log_t, ibuf_size);
+config_binding_ctor(elliptics_source_t, elliptics_source_log_t);
 }
 
-void source_log_t::init() {
+void elliptics_source_log_t::init() {
 	MKCSTR(_filename, filename);
 
 	fd = open(_filename, O_RDONLY, 0);
@@ -296,7 +296,7 @@ void source_log_t::init() {
 	log_file = new log_file_t(ibuf_size, fd);
 }
 
-bool source_log_t::get_request(request_t &request) const {
+bool elliptics_source_log_t::get_request(request_t &request) const {
 	interval_t interval_sleep = interval_zero;
 	bool res = ({
 		thr::mutex_guard_t guard(mutex);
@@ -313,23 +313,23 @@ bool source_log_t::get_request(request_t &request) const {
 	return res;
 }
 
-void source_log_t::stat(out_t &out, bool clear, bool hrr_flag) const {
+void elliptics_source_log_t::stat(out_t &out, bool clear, bool hrr_flag) const {
 	interval_t delta = ({
 		thr::mutex_guard_t guard(mutex);
 		log_file ? log_file->stat(clear) : interval_zero;
 	});
 
 	if(hrr_flag) {
-		out.lf()(CSTR("== source_log")).lf();
+		out.lf()(CSTR("== elliptics_source_log")).lf();
 
 		out(CSTR("delta: ")).print(delta).lf();
 	}
 	else {
-		out(CSTR("source_log\t")).print(delta/interval_millisecond).lf();
+		out(CSTR("elliptics_source_log\t")).print(delta/interval_millisecond).lf();
 	}
 }
 
-void source_log_t::fini() {
+void elliptics_source_log_t::fini() {
 	log_file_t *_log_file = NULL;
 	{
 		thr::mutex_guard_t guard(mutex);

@@ -20,7 +20,7 @@
 namespace phantom { namespace io_benchmark {
 
 namespace method_elliptics {
-class source_t;
+class elliptics_source_t;
 class request_t;
 }
 namespace method_stream {
@@ -35,7 +35,7 @@ public:
 	typedef ioremap::elliptics::session elliptics_session_t;
 	typedef ioremap::elliptics::file_logger elliptics_file_logger_t;
 	typedef ioremap::elliptics::logger elliptics_logger_t;
-	typedef method_elliptics::source_t source_t;
+	typedef method_elliptics::elliptics_source_t elliptics_source_t;
 	typedef method_elliptics::request_t request_t;
 	typedef method_stream::logger_t logger_t;
 	typedef method_stream::result_t result_t;
@@ -44,7 +44,7 @@ private:
 	elliptics_logger_t logger;
 	dnet_config cfg;
 	elliptics_node_t node;
-	source_t &source;
+	elliptics_source_t &source;
 
 	struct loggers_t {
 		size_t size;
@@ -67,14 +67,16 @@ private:
 
 public:
 	struct config_t {
-		config_binding_type_ref(source_t);
+		config_binding_type_ref(elliptics_source_t);
 		config_binding_type_ref(logger_t);
 
-		config::list_t<string_t> remotes;
+		string_t address;
+		int port;
+		int family;
 		string_t logger_filename;
-		config::objptr_t<source_t> source;
+		config::objptr_t<elliptics_source_t> source;
 		config::list_t<config::objptr_t<logger_t> > loggers;
-		unsigned int wait_timeout;
+		unsigned int timeout;
 		long check_timeout;
 		int flags;
 		int io_thread_num;
@@ -87,6 +89,28 @@ public:
 
 	method_elliptics_t(string_t const &, config_t const &);
 	~method_elliptics_t() throw();
+};
+
+class method_elliptics_ipv4_t : public method_elliptics_t
+{
+public:
+	struct config_t : method_elliptics_t::config_t {
+		config_t() throw();
+	};
+
+	method_elliptics_ipv4_t(string_t const &, config_t const &);
+	~method_elliptics_ipv4_t() throw();
+};
+
+class method_elliptics_ipv6_t : public method_elliptics_t
+{
+public:
+	struct config_t : method_elliptics_t::config_t {
+		config_t() throw();
+	};
+
+	method_elliptics_ipv6_t(string_t const &, config_t const &);
+	~method_elliptics_ipv6_t() throw();
 };
 
 }} // namespace phantom::io_benchmark

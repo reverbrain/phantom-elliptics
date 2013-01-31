@@ -41,7 +41,7 @@ struct request_t {
 	in_segment_t data;
 };
 
-class source_t {
+class elliptics_source_t {
 public:
 	virtual bool get_request(request_t &request) const = 0;
 	virtual void init() = 0;
@@ -49,8 +49,8 @@ public:
 	virtual void fini() = 0;
 
 protected:
-	inline source_t() throw() { }
-	inline ~source_t() throw() { }
+	inline elliptics_source_t() throw() { }
+	inline ~elliptics_source_t() throw() { }
 
 private: // don't use
 	void *operator new(size_t);

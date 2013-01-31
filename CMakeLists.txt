@@ -35,7 +35,7 @@ install(FILES
 install(TARGETS
 	mod_io_benchmark_method_elliptics
 	mod_io_benchmark_method_elliptics_source_log
-	LIBRARY DESTINATION lib
-	ARCHIVE DESTINATION lib
-	BUNDLE DESTINATION library
+	LIBRARY DESTINATION lib/phantom
+	ARCHIVE DESTINATION lib/phantom
+	BUNDLE DESTINATION library/phantom
 	)

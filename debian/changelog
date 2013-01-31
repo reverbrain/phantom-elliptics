@@ -1,3 +1,9 @@
+phantom-elliptics (1.0.1) UNRELEASED; urgency=low
+
+  * Make config more similiar to method_stream
+
+ -- Ruslan Nigmatullin <euroelessar@yandex.ru>  Thu, 31 Jan 2013 19:50:08 +0400
+
 phantom-elliptics (1.0.0) unstable; urgency=low
 
   * Initial release

@@ -19,14 +19,20 @@ namespace io_benchmark {
 MODULE(io_benchmark_method_elliptics);
 
 method_elliptics_t::config_t::config_t() throw() :
-	logger_filename(STRING("/dev/null")), wait_timeout(5),
+	port(0), family(0), logger_filename(STRING("/dev/null")), timeout(5),
 	check_timeout(20), flags(0), io_thread_num(1),
 	net_thread_num(1) {
 }
 
 void method_elliptics_t::config_t::check(const in_t::ptr_t &ptr) const {
-	if (!remotes)
-		config::error(ptr, "remotes is empty list");
+	if (!address)
+		config::error(ptr, "address is required");
+
+	if (!port)
+		config::error(ptr, "address is required");
+
+	if (!family)
+		config::error(ptr, "family is required");
 
 	if (!source)
 		config::error(ptr, "source is required");
@@ -44,18 +50,28 @@ void method_elliptics_t::loggers_t::commit(
 
 namespace method_elliptics {
 config_binding_sname(method_elliptics_t);
-config_binding_value(method_elliptics_t, remotes);
-config_binding_type(method_elliptics_t, source_t);
+config_binding_value(method_elliptics_t, address);
+config_binding_value(method_elliptics_t, port);
+config_binding_value(method_elliptics_t, family);
+config_binding_type(method_elliptics_t, elliptics_source_t);
 config_binding_value(method_elliptics_t, source);
 config_binding_value(method_elliptics_t, logger_filename);
 config_binding_type(method_elliptics_t, logger_t);
 config_binding_value(method_elliptics_t, loggers);
-config_binding_value(method_elliptics_t, wait_timeout);
+config_binding_value(method_elliptics_t, timeout);
 config_binding_value(method_elliptics_t, flags);
 config_binding_value(method_elliptics_t, check_timeout);
 config_binding_value(method_elliptics_t, io_thread_num);
 config_binding_value(method_elliptics_t, net_thread_num);
 config_binding_ctor(method_t, method_elliptics_t);
+
+config_binding_sname(method_elliptics_ipv4_t);
+config_binding_parent(method_elliptics_ipv4_t, method_elliptics_t, 1);
+config_binding_ctor(method_t, method_elliptics_ipv4_t);
+
+config_binding_sname(method_elliptics_ipv6_t);
+config_binding_parent(method_elliptics_ipv6_t, method_elliptics_t, 2);
+config_binding_ctor(method_t, method_elliptics_ipv6_t);
 }
 
 static ioremap::elliptics::logger create_logger(const method_elliptics_t::config_t &config) {
@@ -75,7 +91,7 @@ static ioremap::elliptics::logger create_logger(const method_elliptics_t::config
 static dnet_config create_config(const method_elliptics_t::config_t &config) {
 	dnet_config cfg;
 	memset(&cfg, 0, sizeof(cfg));
-	cfg.wait_timeout = config.wait_timeout;
+	cfg.wait_timeout = config.timeout;
 	cfg.flags = config.flags;
 	cfg.check_timeout = config.check_timeout;
 	cfg.io_thread_num = config.io_thread_num;
@@ -88,10 +104,8 @@ method_elliptics_t::method_elliptics_t(const string_t &, const config_t &config)
 	node(logger, cfg), source(*config.source) {
 
 	try {
-		for(typeof(config.remotes.ptr()) rptr = config.remotes; rptr; ++rptr) {
-			MKCSTR(remote, rptr.val());
-			node.add_remote(remote);
-		}
+		MKCSTR(address, config.address);
+		node.add_remote(address, config.port, config.family);
 	} catch (const ioremap::elliptics::error &e) {
 		throw exception_sys_t(log::error, e.error_code(), "%s", e.what());
 	} catch (const std::exception &e) {
@@ -304,6 +318,34 @@ static network_descr_t const network_descr;
 const descr_t *method_elliptics_t::descr(size_t) const throw()
 {
 	return &network_descr;
+}
+
+method_elliptics_ipv4_t::config_t::config_t() throw()
+{
+	family = AF_INET;
+}
+
+method_elliptics_ipv4_t::method_elliptics_ipv4_t(const string_t &s, const config_t &c) :
+	method_elliptics_t(s, c)
+{
+}
+
+method_elliptics_ipv4_t::~method_elliptics_ipv4_t() throw()
+{
+}
+
+method_elliptics_ipv6_t::config_t::config_t() throw()
+{
+	family = AF_INET;
+}
+
+method_elliptics_ipv6_t::method_elliptics_ipv6_t(const string_t &s, const config_t &c) :
+	method_elliptics_t(s, c)
+{
+}
+
+method_elliptics_ipv6_t::~method_elliptics_ipv6_t() throw()
+{
 }
 
 } // namespace io_benchmark
