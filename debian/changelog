@@ -1,3 +1,9 @@
+phantom-elliptics (1.0.2) unstable; urgency=low
+
+  * Added support for ipv4/ipv6
+
+ -- Ruslan Nigmatullin <euroelessar@yandex.ru>  Fri, 01 Feb 2013 17:07:57 +0400
+
 phantom-elliptics (1.0.1) unstable; urgency=low
 
   * Make config more similiar to method_stream

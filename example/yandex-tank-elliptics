@@ -1,0 +1,3 @@
+#! /bin/sh
+yandex-tank -o "phantom.additional_libs=io_benchmark_method_elliptics
+io_benchmark_method_elliptics_source_log" -o "phantom.source_log_prefix=elliptics_" -o "phantom.method_prefix=method_elliptics" -o "phantom.tank_type=" "$@"

@@ -12,6 +12,8 @@
 #include <pd/base/netaddr.H>
 #include <pd/base/config.H>
 #include <pd/base/config_list.H>
+#include <pd/base/ipv4.H>
+#include <pd/base/ipv6.H>
 
 #include <elliptics/cppdef.h>
 
@@ -40,7 +42,7 @@ public:
 	typedef method_stream::logger_t logger_t;
 	typedef method_stream::result_t result_t;
 
-private:
+protected:
 	elliptics_logger_t logger;
 	dnet_config cfg;
 	elliptics_node_t node;
@@ -70,8 +72,7 @@ public:
 		config_binding_type_ref(elliptics_source_t);
 		config_binding_type_ref(logger_t);
 
-		string_t address;
-		int port;
+		u_int16_t port;
 		int family;
 		string_t logger_filename;
 		config::objptr_t<elliptics_source_t> source;
@@ -95,7 +96,10 @@ class method_elliptics_ipv4_t : public method_elliptics_t
 {
 public:
 	struct config_t : method_elliptics_t::config_t {
+		address_ipv4_t address;
+
 		config_t() throw();
+		void check(in_t::ptr_t const &ptr) const;
 	};
 
 	method_elliptics_ipv4_t(string_t const &, config_t const &);
@@ -106,7 +110,10 @@ class method_elliptics_ipv6_t : public method_elliptics_t
 {
 public:
 	struct config_t : method_elliptics_t::config_t {
+		address_ipv6_t address;
+
 		config_t() throw();
+		void check(in_t::ptr_t const &ptr) const;
 	};
 
 	method_elliptics_ipv6_t(string_t const &, config_t const &);

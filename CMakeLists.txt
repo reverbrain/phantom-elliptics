@@ -39,3 +39,8 @@ install(TARGETS
 	ARCHIVE DESTINATION lib/phantom
 	BUNDLE DESTINATION library/phantom
 	)
+
+install(FILES
+	example/yandex-tank-elliptics
+	DESTINATION bin
+	)

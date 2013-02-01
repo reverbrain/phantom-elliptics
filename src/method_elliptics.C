@@ -25,11 +25,8 @@ method_elliptics_t::config_t::config_t() throw() :
 }
 
 void method_elliptics_t::config_t::check(const in_t::ptr_t &ptr) const {
-	if (!address)
-		config::error(ptr, "address is required");
-
 	if (!port)
-		config::error(ptr, "address is required");
+		config::error(ptr, "port is required");
 
 	if (!family)
 		config::error(ptr, "family is required");
@@ -50,7 +47,6 @@ void method_elliptics_t::loggers_t::commit(
 
 namespace method_elliptics {
 config_binding_sname(method_elliptics_t);
-config_binding_value(method_elliptics_t, address);
 config_binding_value(method_elliptics_t, port);
 config_binding_value(method_elliptics_t, family);
 config_binding_type(method_elliptics_t, elliptics_source_t);
@@ -63,15 +59,21 @@ config_binding_value(method_elliptics_t, flags);
 config_binding_value(method_elliptics_t, check_timeout);
 config_binding_value(method_elliptics_t, io_thread_num);
 config_binding_value(method_elliptics_t, net_thread_num);
-config_binding_ctor(method_t, method_elliptics_t);
+//config_binding_ctor(method_t, method_elliptics_t);
 
+namespace ipv4 {
 config_binding_sname(method_elliptics_ipv4_t);
+config_binding_value(method_elliptics_ipv4_t, address);
 config_binding_parent(method_elliptics_ipv4_t, method_elliptics_t, 1);
 config_binding_ctor(method_t, method_elliptics_ipv4_t);
+}
 
+namespace ipv6 {
 config_binding_sname(method_elliptics_ipv6_t);
-config_binding_parent(method_elliptics_ipv6_t, method_elliptics_t, 2);
+config_binding_value(method_elliptics_ipv6_t, address);
+config_binding_parent(method_elliptics_ipv6_t, method_elliptics_t, 1);
 config_binding_ctor(method_t, method_elliptics_ipv6_t);
+}
 }
 
 static ioremap::elliptics::logger create_logger(const method_elliptics_t::config_t &config) {
@@ -102,15 +104,6 @@ static dnet_config create_config(const method_elliptics_t::config_t &config) {
 method_elliptics_t::method_elliptics_t(const string_t &, const config_t &config) :
 	method_t(), logger(create_logger(config)), cfg(create_config(config)),
 	node(logger, cfg), source(*config.source) {
-
-	try {
-		MKCSTR(address, config.address);
-		node.add_remote(address, config.port, config.family);
-	} catch (const ioremap::elliptics::error &e) {
-		throw exception_sys_t(log::error, e.error_code(), "%s", e.what());
-	} catch (const std::exception &e) {
-		throw exception_sys_t(log::error, 0, "%s", e.what());
-	}
 
 	for(typeof(config.loggers.ptr()) lptr = config.loggers; lptr; ++lptr)
 		++loggers.size;
@@ -325,9 +318,26 @@ method_elliptics_ipv4_t::config_t::config_t() throw()
 	family = AF_INET;
 }
 
+void method_elliptics_ipv4_t::config_t::check(const in_t::ptr_t &ptr) const
+{
+	if (!address)
+		config::error(ptr, "address is required");
+
+	method_elliptics_t::config_t::check(ptr);
+}
+
 method_elliptics_ipv4_t::method_elliptics_ipv4_t(const string_t &s, const config_t &c) :
 	method_elliptics_t(s, c)
 {
+	try {
+		string_t address_str(string_t::ctor_t((3 + 1) * 4 - 1).print(c.address));
+		MKCSTR(address, address_str);
+		node.add_remote(address, c.port, c.family);
+	} catch (const ioremap::elliptics::error &e) {
+		throw exception_sys_t(log::error, e.error_code(), "%s", e.what());
+	} catch (const std::exception &e) {
+		throw exception_sys_t(log::error, 0, "%s", e.what());
+	}
 }
 
 method_elliptics_ipv4_t::~method_elliptics_ipv4_t() throw()
@@ -339,9 +349,26 @@ method_elliptics_ipv6_t::config_t::config_t() throw()
 	family = AF_INET;
 }
 
+void method_elliptics_ipv6_t::config_t::check(const in_t::ptr_t &ptr) const
+{
+	if (!address)
+		config::error(ptr, "address is required");
+
+	method_elliptics_t::config_t::check(ptr);
+}
+
 method_elliptics_ipv6_t::method_elliptics_ipv6_t(const string_t &s, const config_t &c) :
 	method_elliptics_t(s, c)
 {
+	try {
+		string_t address_str(string_t::ctor_t((4 + 1) * 8 - 1).print(c.address));
+		MKCSTR(address, address_str);
+		node.add_remote(address, c.port, c.family);
+	} catch (const ioremap::elliptics::error &e) {
+		throw exception_sys_t(log::error, e.error_code(), "%s", e.what());
+	} catch (const std::exception &e) {
+		throw exception_sys_t(log::error, 0, "%s", e.what());
+	}
 }
 
 method_elliptics_ipv6_t::~method_elliptics_ipv6_t() throw()
