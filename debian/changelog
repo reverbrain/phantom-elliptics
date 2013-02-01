@@ -1,4 +1,4 @@
-phantom-elliptics (1.0.1) UNRELEASED; urgency=low
+phantom-elliptics (1.0.1) unstable; urgency=low
 
   * Make config more similiar to method_stream
 
