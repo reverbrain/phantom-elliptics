@@ -13,6 +13,10 @@
 #include <pd/bq/bq_cond.H>
 #include <pd/base/exception.H>
 
+extern "C" {
+int dnet_parse_numeric_id(char *value, unsigned char *id);
+}
+
 namespace phantom {
 namespace io_benchmark {
 
@@ -59,6 +63,7 @@ config_binding_value(method_elliptics_t, logger_level);
 config_binding_type(method_elliptics_t, logger_t);
 config_binding_value(method_elliptics_t, loggers);
 config_binding_value(method_elliptics_t, timeout);
+config_binding_value(method_elliptics_t, nodes_count);
 config_binding_value(method_elliptics_t, flags);
 config_binding_value(method_elliptics_t, check_timeout);
 config_binding_value(method_elliptics_t, io_thread_num);
@@ -198,7 +203,16 @@ bool method_elliptics_t::test(stat_t &stat) const
 	result.size_out += request.groups.size() * sizeof(dnet_cmd);
 	result.size_in += request.groups.size() * sizeof(dnet_cmd);
 
-	ioremap::elliptics::key id(make_string(request.filename));
+	ioremap::elliptics::key id;
+	if (request.id) {
+		MKCSTR(cid, request.id);
+		dnet_id did;
+		memset(&did, 0, sizeof(did));
+		dnet_parse_numeric_id(cid, did.id);
+		id = did;
+	} else {
+		id = make_string(request.filename);
+	}
 
 	try {
 		std::exception_ptr exception;

@@ -1,3 +1,9 @@
+phantom-elliptics (1.0.5) unstable; urgency=low
+
+  * Added dnet_id support
+
+ -- Ruslan Nigmatullin <euroelessar@yandex.ru>  Tue, 05 Feb 2013 03:13:31 +0400
+
 phantom-elliptics (1.0.4) unstable; urgency=low
 
   * Added several nodes support

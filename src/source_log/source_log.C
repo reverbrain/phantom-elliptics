@@ -144,12 +144,12 @@ bool log_file_t::get_request(
 
 		request.filename = in_segment_t(filenamep, ptr - filenamep);
 
-		if (*ptr == ' ') {
-			++ptr;
-			ptr.parse(request.type, error_handler);
-		} else {
-			request.type = 0;
-		}
+		in_t::ptr_t idp = ptr;
+		limit = LINE_LENGTH;
+		if (!ptr.scan(" \n", 2, limit))
+			throw exception_log_t(log::error, "format error #7-2");
+
+		request.id = in_segment_t(idp, ptr - idp);
 
 		if (*ptr != '\n')
 			throw exception_log_t(log::error, "format error #8");

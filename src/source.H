@@ -31,7 +31,7 @@ struct request_t {
 	std::vector<int> groups;
 
 	in_segment_t filename;
-	int type;
+	in_segment_t id;
 
 	in_segment_t request;
 	in_segment_t tag;
