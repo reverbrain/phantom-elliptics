@@ -45,7 +45,7 @@ public:
 protected:
 	elliptics_logger_t logger;
 	dnet_config cfg;
-	elliptics_node_t node;
+	std::vector<elliptics_node_t> nodes;
 	elliptics_source_t &source;
 
 	struct loggers_t {
@@ -78,7 +78,8 @@ public:
 		int logger_level;
 		config::objptr_t<elliptics_source_t> source;
 		config::list_t<config::objptr_t<logger_t> > loggers;
-		unsigned int timeout;
+		uint timeout;
+		uint nodes_count;
 		long check_timeout;
 		int flags;
 		int io_thread_num;

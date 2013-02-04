@@ -20,11 +20,14 @@ MODULE(io_benchmark_method_elliptics);
 
 method_elliptics_t::config_t::config_t() throw() :
 	port(0), family(0), logger_filename(STRING("/dev/null")), logger_level(0),
-	timeout(5), check_timeout(20), flags(0), io_thread_num(1),
+	timeout(5), nodes_count(1), check_timeout(20), flags(0), io_thread_num(1),
 	net_thread_num(1) {
 }
 
 void method_elliptics_t::config_t::check(const in_t::ptr_t &ptr) const {
+	if (!nodes_count)
+		config::error(ptr, "nodes_count must be positive");
+
 	if (!port)
 		config::error(ptr, "port is required");
 
@@ -104,7 +107,10 @@ static dnet_config create_config(const method_elliptics_t::config_t &config) {
 
 method_elliptics_t::method_elliptics_t(const string_t &, const config_t &config) :
 	method_t(), logger(create_logger(config)), cfg(create_config(config)),
-	node(logger, cfg), source(*config.source) {
+	source(*config.source) {
+
+	for (uint i = 0; i < config.nodes_count; ++i)
+		nodes.emplace_back(logger, cfg);
 
 	for(typeof(config.loggers.ptr()) lptr = config.loggers; lptr; ++lptr)
 		++loggers.size;
@@ -184,7 +190,7 @@ bool method_elliptics_t::test(stat_t &stat) const
 	stat_t::tcount_guard_t tcount_guard(stat);
 	result_t result;
 
-	elliptics_session_t session(node);
+	elliptics_session_t session(nodes[rand() % nodes.size()]);
 
 	session.set_cflags(request.cflags);
 	session.set_ioflags(request.ioflags);
@@ -333,7 +339,8 @@ method_elliptics_ipv4_t::method_elliptics_ipv4_t(const string_t &s, const config
 	try {
 		string_t address_str(string_t::ctor_t((3 + 1) * 4 - 1).print(c.address));
 		MKCSTR(address, address_str);
-		node.add_remote(address, c.port, c.family);
+		for (uint i = 0; i < nodes.size(); ++i)
+			nodes[i].add_remote(address, c.port, c.family);
 	} catch (const ioremap::elliptics::error &e) {
 		throw exception_sys_t(log::error, e.error_code(), "%s", e.what());
 	} catch (const std::exception &e) {
@@ -364,7 +371,8 @@ method_elliptics_ipv6_t::method_elliptics_ipv6_t(const string_t &s, const config
 	try {
 		string_t address_str(string_t::ctor_t((4 + 1) * 8 - 1).print(c.address));
 		MKCSTR(address, address_str);
-		node.add_remote(address, c.port, c.family);
+		for (uint i = 0; i < nodes.size(); ++i)
+			nodes[i].add_remote(address, c.port, c.family);
 	} catch (const ioremap::elliptics::error &e) {
 		throw exception_sys_t(log::error, e.error_code(), "%s", e.what());
 	} catch (const std::exception &e) {
