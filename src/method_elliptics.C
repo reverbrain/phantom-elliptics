@@ -19,8 +19,8 @@ namespace io_benchmark {
 MODULE(io_benchmark_method_elliptics);
 
 method_elliptics_t::config_t::config_t() throw() :
-	port(0), family(0), logger_filename(STRING("/dev/null")), timeout(5),
-	check_timeout(20), flags(0), io_thread_num(1),
+	port(0), family(0), logger_filename(STRING("/dev/null")), logger_level(0),
+	timeout(5), check_timeout(20), flags(0), io_thread_num(1),
 	net_thread_num(1) {
 }
 
@@ -52,6 +52,7 @@ config_binding_value(method_elliptics_t, family);
 config_binding_type(method_elliptics_t, elliptics_source_t);
 config_binding_value(method_elliptics_t, source);
 config_binding_value(method_elliptics_t, logger_filename);
+config_binding_value(method_elliptics_t, logger_level);
 config_binding_type(method_elliptics_t, logger_t);
 config_binding_value(method_elliptics_t, loggers);
 config_binding_value(method_elliptics_t, timeout);
@@ -80,9 +81,9 @@ static ioremap::elliptics::logger create_logger(const method_elliptics_t::config
 	try {
 		MKCSTR(logger_filename, config.logger_filename);
 		if (strcmp(logger_filename, "/dev/null") == 0)
-			return method_elliptics_t::elliptics_logger_t(0, DNET_LOG_ERROR);
+			return method_elliptics_t::elliptics_logger_t(0, config.logger_level);
 		else
-			return method_elliptics_t::elliptics_file_logger_t(logger_filename, DNET_LOG_ERROR);
+			return method_elliptics_t::elliptics_file_logger_t(logger_filename, config.logger_level);
 	} catch (const ioremap::elliptics::error &e) {
 		throw exception_sys_t(log::error, e.error_code(), "%s", e.what());
 	} catch (const std::exception &e) {

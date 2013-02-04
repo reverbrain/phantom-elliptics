@@ -1,3 +1,9 @@
+phantom-elliptics (1.0.3) unstable; urgency=low
+
+  * Added log_level property
+
+ -- Ruslan Nigmatullin <euroelessar@yandex.ru>  Tue, 05 Feb 2013 00:48:32 +0400
+
 phantom-elliptics (1.0.2) unstable; urgency=low
 
   * Added support for ipv4/ipv6

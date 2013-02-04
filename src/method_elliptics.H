@@ -75,6 +75,7 @@ public:
 		u_int16_t port;
 		int family;
 		string_t logger_filename;
+		int logger_level;
 		config::objptr_t<elliptics_source_t> source;
 		config::list_t<config::objptr_t<logger_t> > loggers;
 		unsigned int timeout;
