@@ -269,6 +269,7 @@ bool method_elliptics_t::test(stat_t &stat) const
 				throw exception_sys_t(log::error, errno, "cond.wait: %m");
 		}
 
+		result.time_recv = std::max(result.time_recv, result.time_send);
 		result.time_end = timeval_current();
 
 		if (exception != std::exception_ptr()) {
