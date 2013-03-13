@@ -1,3 +1,9 @@
+phantom-elliptics (1.0.7) UNRELEASED; urgency=low
+
+  * Added exec command
+
+ -- Ruslan Nigmatullin <euroelessar@yandex.ru>  Wed, 13 Mar 2013 21:12:31 +0400
+
 phantom-elliptics (1.0.6) unstable; urgency=low
 
   * Fixed time_recv value

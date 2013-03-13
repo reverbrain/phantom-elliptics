@@ -204,6 +204,10 @@ struct method_elliptics_handler_t
 		finish();
 	}
 
+	void operator() (const ioremap::elliptics::exec_result &)
+	{
+	}
+
 	void finish()
 	{
 		bq_cond_guard_t guard(*cond);
@@ -236,7 +240,7 @@ bool method_elliptics_t::test(stat_t &stat) const
 		memset(&did, 0, sizeof(did));
 		dnet_parse_numeric_id(cid, did.id);
 		id = did;
-	} else {
+	} else if (request.command != method_elliptics::exec_request) {
 		id = make_string(request.filename);
 	}
 
@@ -258,6 +262,17 @@ bool method_elliptics_t::test(stat_t &stat) const
 		case method_elliptics::remove_data:
 			session.remove(handler, id);
 			break;
+		case method_elliptics::exec_request: {
+			result.size_out += request.data.size();
+			const std::string tmp_data = make_string(request.data);
+			const ioremap::elliptics::data_pointer data = tmp_data;
+			dnet_id did;
+			did.group_id = 0;
+			did.type = 0;
+			session.transform(data, did);
+			session.exec(handler, handler, &did, make_string(request.filename), data);
+			break;
+			}
 		}
 
 		result.time_conn = timeval_current();

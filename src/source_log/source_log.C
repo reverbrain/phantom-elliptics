@@ -166,6 +166,7 @@ bool log_file_t::get_request(
 		str_t write_command = CSTR("write");
 		str_t read_command = CSTR("read");
 		str_t remove_command = CSTR("remove");
+		str_t exec_command = CSTR("exec");
 
 		MKCSTR(cmd, in_segment_t(linep, 4));
 
@@ -178,6 +179,9 @@ bool log_file_t::get_request(
 		} else if (linep.match<ident_t>(remove_command)) {
 			linep += remove_command.size();
 			request.command = remove_data;
+		} else if (linep.match<ident_t>(exec_command)) {
+			linep += exec_command.size();
+			request.command = exec_request;
 		} else {
 			throw exception_log_t(log::error, "format error #9");
 		}
@@ -202,7 +206,7 @@ bool log_file_t::get_request(
 			throw exception_log_t(log::error, "format error #11");
 		++ptr;
 
-		if (request.command == write_data) {
+		if (request.command == write_data || request.command == exec_request) {
 			if (ptr == endp)
 				throw exception_log_t(log::error, "format error #12");
 

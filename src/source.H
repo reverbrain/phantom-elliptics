@@ -20,7 +20,8 @@ namespace phantom { namespace io_benchmark { namespace method_elliptics {
 enum command_t {
 	write_data,
 	read_data,
-	remove_data
+	remove_data,
+	exec_request
 };
 
 struct request_t {
