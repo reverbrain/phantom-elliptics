@@ -1,4 +1,10 @@
-phantom-elliptics (1.0.7) UNRELEASED; urgency=low
+phantom-elliptics (1.0.8) unstable; urgency=low
+
+  * Added ability to set id for exec command
+
+ -- Ruslan Nigmatullin <euroelessar@yandex.ru>  Thu, 14 Mar 2013 17:42:18 +0400
+
+phantom-elliptics (1.0.7) unstable; urgency=low
 
   * Added exec command
 

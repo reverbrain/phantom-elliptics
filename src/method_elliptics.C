@@ -240,7 +240,9 @@ bool method_elliptics_t::test(stat_t &stat) const
 		memset(&did, 0, sizeof(did));
 		dnet_parse_numeric_id(cid, did.id);
 		id = did;
-	} else if (request.command != method_elliptics::exec_request) {
+	} else if (request.command == method_elliptics::exec_request) {
+		id = make_string(request.data);
+	} else {
 		id = make_string(request.filename);
 	}
 
@@ -266,10 +268,8 @@ bool method_elliptics_t::test(stat_t &stat) const
 			result.size_out += request.data.size();
 			const std::string tmp_data = make_string(request.data);
 			const ioremap::elliptics::data_pointer data = tmp_data;
-			dnet_id did;
-			did.group_id = 0;
-			did.type = 0;
-			session.transform(data, did);
+			id.transform(session);
+			dnet_id did = id.id();
 			session.exec(handler, handler, &did, make_string(request.filename), data);
 			break;
 			}
