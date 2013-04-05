@@ -4,8 +4,8 @@ Priority: optional
 Maintainer: Ruslan Nigmatullin <euroelessar@yandex.ru>
 Build-Depends:	debhelper (>= 7),
 		cmake,
-		elliptics-dev (>= 2.21),
-		elliptics-client (>= 2.21),
+		elliptics-dev (>= 2.23),
+		elliptics-client (>= 2.23),
 		phantom-dev (>= 0.14.0~pre42)
 Standards-Version: 1.0.0
 Homepage: http://github.com/euroelessar/phantom-elliptics

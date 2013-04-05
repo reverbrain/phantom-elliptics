@@ -166,51 +166,20 @@ static inline std::string make_string(in_segment_t &in)
 
 struct method_elliptics_handler_t
 {
-	std::exception_ptr *exception;
+	ioremap::elliptics::error_info *exception;
 	bq_cond_t *cond;
 	timeval_t *time_recv;
 	size_t *size_in;
 
-	template <typename T>
-	void operator() (const ioremap::elliptics::array_result_holder<T> &result)
+	void operator() (const ioremap::elliptics::callback_result_entry &result)
 	{
-		if ((*exception = result.exception()) != std::exception_ptr()) {
-			finish();
-			return;
-		}
-
-		for (size_t i = 0; i < result.size(); ++i)
-			*size_in += result[i].raw_data().size();
-
-		finish();
+		*size_in += result.raw_data().size();
 	}
 
-	template <typename T>
-	void operator() (const ioremap::elliptics::result_holder<T> &result)
-	{
-		if ((*exception = result.exception()) != std::exception_ptr()) {
-			finish();
-			return;
-		}
-
-		*size_in += result->raw_data().size();
-
-		finish();
-	}
-
-	void operator() (const std::exception_ptr &exc)
-	{
-		*exception = exc;
-		finish();
-	}
-
-	void operator() (const ioremap::elliptics::exec_result &)
-	{
-	}
-
-	void finish()
+	void operator() (const ioremap::elliptics::error_info &error)
 	{
 		bq_cond_guard_t guard(*cond);
+		*exception = error;
 		*time_recv = timeval_current();
 		cond->send();
 	}
@@ -230,6 +199,9 @@ bool method_elliptics_t::test(stat_t &stat) const
 	session.set_cflags(request.cflags);
 	session.set_ioflags(request.ioflags);
 	session.set_groups(request.groups);
+	session.set_filter(ioremap::elliptics::filters::all_with_ack);
+	session.set_exceptions_policy(ioremap::elliptics::session::no_exceptions);
+
 	result.size_out += request.groups.size() * sizeof(dnet_cmd);
 	result.size_in += request.groups.size() * sizeof(dnet_cmd);
 
@@ -247,7 +219,7 @@ bool method_elliptics_t::test(stat_t &stat) const
 	}
 
 	try {
-		std::exception_ptr exception;
+		ioremap::elliptics::error_info exception;
 		bq_cond_t cond;
 		method_elliptics_handler_t handler = {
 			&exception, &cond, &result.time_recv, &result.size_in
@@ -256,13 +228,13 @@ bool method_elliptics_t::test(stat_t &stat) const
 		switch (request.command) {
 		case method_elliptics::write_data:
 			result.size_out += request.groups.size() * request.data.size();
-			session.write_data(handler, id, make_string(request.data), request.offset);
+			session.write_data(id, make_string(request.data), request.offset).connect(handler, handler);
 			break;
 		case method_elliptics::read_data:
-			session.read_data(handler, id, request.offset, request.size);
+			session.read_data(id, request.offset, request.size).connect(handler, handler);
 			break;
 		case method_elliptics::remove_data:
-			session.remove(handler, id);
+			session.remove(id).connect(handler, handler);
 			break;
 		case method_elliptics::exec_request: {
 			result.size_out += request.data.size();
@@ -270,7 +242,7 @@ bool method_elliptics_t::test(stat_t &stat) const
 			const ioremap::elliptics::data_pointer data = tmp_data;
 			id.transform(session);
 			dnet_id did = id.id();
-			session.exec(handler, handler, &did, make_string(request.filename), data);
+			session.exec(&did, make_string(request.filename), data).connect(handler, handler);
 			break;
 			}
 		}
@@ -287,19 +259,19 @@ bool method_elliptics_t::test(stat_t &stat) const
 		result.time_recv = std::max(result.time_recv, result.time_send);
 		result.time_end = timeval_current();
 
-		if (exception != std::exception_ptr()) {
+		if (exception) {
 			result.log_level = logger_t::proto_warning;
-			try {
-				std::rethrow_exception(exception);
-			} catch (const ioremap::elliptics::not_found_error &e) {
-				result.err = -e.error_code();
+			result.err = exception.code();
+			switch (exception.code()) {
+			case -ENOENT:
 				result.proto_code = 404;
-			} catch (const ioremap::elliptics::error &e) {
-				result.err = -e.error_code();
+				break;
+			case -ENXIO:
+				result.proto_code = 403;
+				break;
+			default:
 				result.proto_code = 500;
-			} catch (const std::bad_alloc &e) {
-				result.err = ENOMEM;
-				result.proto_code = 500;
+				break;
 			}
 		} else {
 			result.proto_code = 200;
