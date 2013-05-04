@@ -1,3 +1,9 @@
+phantom-elliptics (1.0.10-ell2.24) unstable; urgency=low
+
+  * Build with 2.24 elliptics
+
+ -- Evgeniy Polyakov <zbr@ioremap.net>  Sat, 04 May 2013 23:42:30 +0400
+
 phantom-elliptics (1.0.9) unstable; urgency=low
 
   * Update to elliptics-2.23
