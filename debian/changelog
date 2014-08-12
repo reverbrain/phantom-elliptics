@@ -1,3 +1,9 @@
+phantom-elliptics (1.1.0-ell2.26) unstable; urgency=low
+
+  * Updated for phantom-0.14.0~pre65 & elliptics-2.26
+
+ -- Ruslan Nigmatullin <euroelessar@yandex.ru>  Tue, 12 Aug 2014 21:01:46 +0400
+
 phantom-elliptics (1.0.11-ell2.24) unstable; urgency=low
 
   * Depend on elliptics 2.24.7 and higher
