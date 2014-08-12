@@ -46,7 +46,8 @@ class elliptics_source_t {
 public:
 	virtual bool get_request(request_t &request) const = 0;
 	virtual void init() = 0;
-	virtual void stat(out_t &out, bool clear, bool hrr_flag) const = 0;
+	virtual void run() = 0;
+	virtual void stat_print() const = 0;
 	virtual void fini() = 0;
 
 protected:

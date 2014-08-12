@@ -16,6 +16,7 @@
 #include <pd/base/size.H>
 #include <pd/base/config.H>
 #include <pd/base/cmp.H>
+#include <pd/base/mutex.H>
 
 #include <pd/bq/bq_util.H>
 
@@ -42,8 +43,8 @@ class log_file_t {
 
 public:
 	inline log_file_t(size_t ibuf_size, int fd) :
-		in(ibuf_size, fd), ptr(in), timeval_start(timeval_current()),
-		delta(interval_zero), delta_max(interval_zero), work(true) { }
+		in(ibuf_size, fd), ptr(in), timeval_start(timeval::current()),
+		delta(interval::zero), delta_max(interval::zero), work(true) { }
 
 	inline ~log_file_t() throw() { }
 
@@ -75,12 +76,11 @@ bool log_file_t::get_request(
 			++ptr;
 			int64_t msec = 0;
 			ptr.parse(msec, &error_handler);
-			interval_t interval_request = msec * interval_millisecond;
+			interval_t interval_request = msec * interval::millisecond;
 
-			interval_sleep =
-				interval_request - (timeval_current() - timeval_start);
+			interval_sleep = interval_request - (timeval::current() - timeval_start);
 
-			if(interval_sleep < interval_zero) {
+			if(interval_sleep < interval::zero) {
 				if (delta < -interval_sleep) {
 					delta = -interval_sleep;
 
@@ -88,7 +88,7 @@ bool log_file_t::get_request(
 						delta_max = delta;
 				}
 
-				interval_sleep = interval_zero;
+				interval_sleep = interval::zero;
 			}
 		}
 
@@ -239,7 +239,7 @@ interval_t log_file_t::stat(bool clear) {
 
 	if(clear) {
 		delta_print = delta;
-		delta = interval_zero;
+		delta = interval::zero;
 	}
 	else
 		delta_print = delta_max;
@@ -253,31 +253,49 @@ public:
 		string_t filename;
 		sizeval_t ibuf_size;
 
-		inline config_t() throw() : filename(), ibuf_size(sizeval_mega) { }
+		inline config_t() throw() : filename(), ibuf_size(sizeval::mega) { }
 
 		inline void check(in_t::ptr_t const &ptr) const {
 			if(!filename)
 				config::error(ptr, "filename is required");
 
-			if(ibuf_size > sizeval_giga)
+			if(ibuf_size > sizeval::giga)
 				config::error(ptr, "ibuf_size is too big");
 
-			if(ibuf_size < sizeval_kilo)
+			if(ibuf_size < sizeval::kilo)
 				config::error(ptr, "ibuf_size is too small");
 		}
 	};
 
 private:
-	mutable thr::mutex_t mutex;
+	mutable mutex_t mutex;
 	int fd;
 	size_t ibuf_size;
 	string_t filename;
 	log_file_t *log_file;
 
+
 	virtual bool get_request(request_t &request) const;
 	virtual void init();
-	virtual void stat(out_t &out, bool clear, bool hrr_flag) const;
+	virtual void run();
+	virtual void stat_print() const;
 	virtual void fini();
+	typedef stat::mminterval_t delta_t;
+
+	typedef stat::items_t<delta_t> stat_base_t;
+
+	struct stat_t : stat_base_t {
+		inline stat_t() throw() : stat_base_t(
+		STRING("delta")
+		) { }
+
+		inline ~stat_t() throw() { }
+
+		inline delta_t &delta() throw() { return item<0>(); }
+	};
+
+	stat_t mutable stat;
+
 
 public:
 	inline elliptics_source_log_t(string_t const &, config_t const &config) :
@@ -304,10 +322,19 @@ void elliptics_source_log_t::init() {
 	log_file = new log_file_t(ibuf_size, fd);
 }
 
+void elliptics_source_log_t::run()
+{
+}
+
+void elliptics_source_log_t::stat_print() const
+{
+	stat.print();
+}
+
 bool elliptics_source_log_t::get_request(request_t &request) const {
-	interval_t interval_sleep = interval_zero;
+	interval_t interval_sleep = interval::zero;
 	bool res = ({
-		thr::mutex_guard_t guard(mutex);
+		mutex_guard_t guard(mutex);
 
 		if(!log_file)
 			return false;
@@ -315,32 +342,23 @@ bool elliptics_source_log_t::get_request(request_t &request) const {
 		log_file->get_request(request, interval_sleep);
 	});
 
-	if(res && interval_sleep > interval_zero && bq_sleep(&interval_sleep) < 0)
-		return false;
+	if (res) {
+		if (interval_sleep > interval::zero) {
+			stat.delta() = interval::zero;
+			if (bq_sleep(&interval_sleep) < 0)
+				return false;
+		} else {
+			stat.delta() = -interval_sleep;
+		}
+	}
 
 	return res;
-}
-
-void elliptics_source_log_t::stat(out_t &out, bool clear, bool hrr_flag) const {
-	interval_t delta = ({
-		thr::mutex_guard_t guard(mutex);
-		log_file ? log_file->stat(clear) : interval_zero;
-	});
-
-	if(hrr_flag) {
-		out.lf()(CSTR("== elliptics_source_log")).lf();
-
-		out(CSTR("delta: ")).print(delta).lf();
-	}
-	else {
-		out(CSTR("elliptics_source_log\t")).print(delta/interval_millisecond).lf();
-	}
 }
 
 void elliptics_source_log_t::fini() {
 	log_file_t *_log_file = NULL;
 	{
-		thr::mutex_guard_t guard(mutex);
+		mutex_guard_t guard(mutex);
 		_log_file = log_file;
 		log_file = NULL;
 	}

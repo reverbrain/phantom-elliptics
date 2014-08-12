@@ -24,6 +24,7 @@ namespace phantom { namespace io_benchmark {
 namespace method_elliptics {
 class elliptics_source_t;
 class request_t;
+class stat_t;
 }
 namespace method_stream {
 class logger_t;
@@ -36,36 +37,36 @@ public:
 	typedef ioremap::elliptics::node elliptics_node_t;
 	typedef ioremap::elliptics::session elliptics_session_t;
 	typedef ioremap::elliptics::file_logger elliptics_file_logger_t;
+	typedef ioremap::elliptics::logger_base elliptics_logger_base_t;
 	typedef ioremap::elliptics::logger elliptics_logger_t;
 	typedef method_elliptics::elliptics_source_t elliptics_source_t;
 	typedef method_elliptics::request_t request_t;
+	typedef method_elliptics::stat_t stat_t;
 	typedef method_stream::logger_t logger_t;
 	typedef method_stream::result_t result_t;
 
 protected:
-	elliptics_logger_t logger;
+	struct loggers_t : sarray1_t<logger_t *>
+	{
+		inline loggers_t(const config::list_t<config::objptr_t<logger_t>> &list) throw() : sarray1_t<logger_t *>(list) {}
+		inline ~loggers_t() throw() {}
+
+		void commit(const in_segment_t &request, const in_segment_t &tag, const result_t &res) const;
+
+	};
+
+	elliptics_logger_base_t logger;
 	dnet_config cfg;
 	std::vector<elliptics_node_t> nodes;
 	elliptics_source_t &source;
+	stat_t &stat;
+	loggers_t &loggers;
 
-	struct loggers_t {
-		size_t size;
-		logger_t **items;
-		inline loggers_t() throw() : size(0), items(NULL) { }
-		inline ~loggers_t() throw() { if(items) delete [] items; }
-
-		void commit(
-			in_segment_t const &request, in_segment_t const &tag, result_t const &res
-		) const;
-
-	} loggers;
-
-	virtual bool test(stat_t &stat) const;
-	virtual void init();
-	virtual void stat(out_t &out, bool clear, bool hrr_flag) const;
-	virtual void fini();
-	virtual size_t maxi() const throw();
-	virtual descr_t const *descr(size_t ind) const throw();
+	bool test(times_t &stat) const;
+	void do_init();
+	void do_fini();
+	void do_run() const;
+	void do_stat_print() const;
 
 public:
 	struct config_t {
@@ -75,7 +76,7 @@ public:
 		u_int16_t port;
 		int family;
 		string_t logger_filename;
-		int logger_level;
+		string_t logger_level;
 		config::objptr_t<elliptics_source_t> source;
 		config::list_t<config::objptr_t<logger_t> > loggers;
 		uint timeout;
